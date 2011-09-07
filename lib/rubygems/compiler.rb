@@ -110,11 +110,7 @@ Results logged to #{File.join(Dir.pwd, 'gem_make.out')}
 			end
 		end
 
-    #generated_files = spec.extensions.collect{|extension_path| Dir.glob("#{File.join(gem_dir, File.dirname(extension_path))}/*.{so,a,bundle}")}.flatten
-    #generated_files = generated_files.collect{|file_path| file_path[gem_dir.length + 1, file_path.length]}
-
-
-		unless fat_commands.empty?
+    unless fat_commands.empty?
 			fat_ext_files = fat_commands.keys.uniq.map do |version|
 				dest_version_path = File.join(dest_path, version)
 				fat_ext_paths = Dir.glob("#{dest_version_path}/**/*")
