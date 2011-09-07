@@ -13,15 +13,19 @@ class Gem::Commands::CompileCommand < Gem::Command
 
 		add_option('-f', '--fat VERSION:RUBY,...', 'Create fat binary (e.g. --fat 1.8:ruby,1.9:ruby19)') do |value, options|
 			options[:fat] = value
-		end
+    end
+
+    add_option('--exclude-source', 'Exclude source extension files (.c and .h files) as well as the extensions themselves (extconf.rb files, etc)') do |value, options|
+      options[:exclude_source] = true
+    end
 	end
 
 	def arguments # :nodoc:
-		"GEMFILE       name of gem to compile"
+		"GEM       Path of gem to compile"
 	end
 
 	def usage # :nodoc:
-		"#{program_name} GEMFILE"
+		"#{program_name} GEM"
 	end
 
 	def execute
@@ -42,7 +46,7 @@ class Gem::Commands::CompileCommand < Gem::Command
 			fat_commands[ver] = cmd
 		end
 
-		Gem::Compiler.compile(gem, options[:platform], fat_commands)
+		Gem::Compiler.compile(gem, options[:platform], fat_commands, options)
 	end
 end
 

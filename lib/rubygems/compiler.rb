@@ -10,7 +10,7 @@ class Gem::Compiler
 
 	extend Gem::UserInteraction
 
-	def self.compile(gem, platform = Gem::Platform::CURRENT, fat_commands = {})
+	def self.compile(gem, platform = Gem::Platform::CURRENT, fat_commands = {}, opts = {})
 		gem_dir = "#{File.basename(gem)}.build"
 		gem_dir = File.expand_path(gem_dir)
 
@@ -18,7 +18,7 @@ class Gem::Compiler
 
 		spec = format.spec
 
-		if spec.extensions.empty?
+    if spec.extensions.empty?
 			raise Gem::Exception, "There are no extensions to build."
 		end
 
@@ -27,6 +27,7 @@ class Gem::Compiler
 		end
 
 		dest_path = File.join(gem_dir, spec.require_paths.first)
+
 		FileUtils.rm_rf(dest_path) if File.exists?(dest_path)
 
 		format.file_entries.each do |entry, file_data|
@@ -74,8 +75,6 @@ class Gem::Compiler
 					results = builder.build(extension, gem_dir, dest_path, results)
 
 				else
-					ext_files = []
-
 					fat_commands.each_pair do |version, command|
 						dest_version_path = File.join(dest_path, version)
 
@@ -111,7 +110,9 @@ Results logged to #{File.join(Dir.pwd, 'gem_make.out')}
 			end
 		end
 
-		spec.extensions = []
+    #generated_files = spec.extensions.collect{|extension_path| Dir.glob("#{File.join(gem_dir, File.dirname(extension_path))}/*.{so,a,bundle}")}.flatten
+    #generated_files = generated_files.collect{|file_path| file_path[gem_dir.length + 1, file_path.length]}
+
 
 		unless fat_commands.empty?
 			fat_ext_files = fat_commands.keys.uniq.map do |version|
@@ -131,12 +132,14 @@ require File.join File.dirname(__FILE__), RUBY_VERSION.match(/\\d+\\.\\d+/)[0], 
 			end
 		end
 
-		built_paths = Dir.glob("#{dest_path}/**/*")
+		built_paths = Dir.glob("#{dest_path}/**/*.{so,bundle}")
 		built_files = built_paths.map {|path| path[File.join(gem_dir,'').length..-1] }
-		built_files.reject! {|path| path =~ /\.o$/ }  # FIXME
 
 		spec.files = (spec.files + built_files).sort.uniq
+    spec.files = spec.files.reject{|file| file =~ /\.(c|h)$/} - spec.extensions if opts[:exclude_source] #exclude source and extension files
 		spec.platform = platform if platform
+
+    spec.extensions = [] # No longer necessary to compile extensions
 
 		Dir.chdir gem_dir
 		begin
