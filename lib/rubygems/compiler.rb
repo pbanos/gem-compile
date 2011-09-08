@@ -128,7 +128,7 @@ require File.join File.dirname(__FILE__), RUBY_VERSION.match(/\\d+\\.\\d+/)[0], 
       end
     end
 
-    built_paths = Dir.glob("#{dest_path}/**/*.{so,bundle}")
+    built_paths = spec.require_paths.collect{|require_path| Dir.glob("#{File.join(gem_dir,require_path)}/**/*.{so,bundle}")}.flatten # Dir.glob("#{dest_path}/**/*.{so,bundle}")
     built_files = built_paths.map { |path| path[File.join(gem_dir, '').length..-1] }
 
     spec.files = (spec.files + built_files).sort.uniq
